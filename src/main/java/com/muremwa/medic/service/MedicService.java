@@ -77,26 +77,21 @@ public class MedicService {
         return authToken;
     }
 
-    public List<Symptom> fetchSymptoms() {
+    public List<Symptom> fetchSymptoms() throws HttpClientErrorException {
         List<Symptom> symptoms = null;
 
-        try {
-            ResponseEntity<List<Symptom>> response = this.restTemplate.exchange(
-                    this.priadPathBuilder("/symptoms", null),
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<>() {}
-            );
-            symptoms = response.getStatusCode() == HttpStatus.OK? response.getBody(): Collections.emptyList();
-
-        } catch (Error error) {
-            //
-        }
+        ResponseEntity<List<Symptom>> response = this.restTemplate.exchange(
+                this.priadPathBuilder("/symptoms", null),
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {}
+        );
+        symptoms = response.getStatusCode() == HttpStatus.OK? response.getBody(): Collections.emptyList();
 
         return symptoms;
     }
 
-    public List<Diagnosis> diagnose(ArrayList<Integer> symptomIds, String gender, int yob) {
+    public List<Diagnosis> diagnose(ArrayList<Integer> symptomIds, String gender, int yob) throws HttpClientErrorException {
         List<Diagnosis> diagnoses = null;
         Map<String, String> diagnoseParams = new HashMap<>();
         String symptoms = symptomIds.stream().map((id) -> Integer.toString(id)).collect(Collectors.joining(","));
@@ -105,18 +100,14 @@ public class MedicService {
         diagnoseParams.put("gender", gender);
         diagnoseParams.put("year_of_birth", String.valueOf(yob));
 
-        try {
-            ResponseEntity<List<Diagnosis>> response = this.restTemplate.exchange(
-                    this.priadPathBuilder("/diagnosis", diagnoseParams),
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<>() {}
-            );
+        ResponseEntity<List<Diagnosis>> response = this.restTemplate.exchange(
+                this.priadPathBuilder("/diagnosis", diagnoseParams),
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {}
+        );
 
-            diagnoses = response.getStatusCode() == HttpStatus.OK? response.getBody(): Collections.emptyList();
-        } catch (HttpClientErrorException errorException) {
-            //
-        }
+        diagnoses = response.getStatusCode() == HttpStatus.OK? response.getBody(): Collections.emptyList();
 
         return diagnoses;
     }
