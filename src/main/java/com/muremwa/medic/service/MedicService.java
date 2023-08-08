@@ -13,12 +13,14 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.lang.model.type.NullType;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class MedicService {
     private final String PRIAD_URL;
-    private String PRIAD_AUTH_TOKEN = "";
+    private final String PRIAD_AUTH_TOKEN;
     private final String PRIAD_AUTH_PASSWORD;
     private final RestTemplate restTemplate;
     private final Map<String, String> priadRequestParams = new HashMap<>();
@@ -44,7 +46,7 @@ public class MedicService {
 
     private String priadPathBuilder(String path, Map<String, String> params) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(PRIAD_URL).path(path);
-        Map<String, String> localParams = params != null? params: new HashMap();
+        Map<String, String> localParams = params != null? params: new HashMap<>();
         localParams.putAll(this.priadRequestParams);
 
         for (String key: localParams.keySet()) {
@@ -54,10 +56,12 @@ public class MedicService {
     }
 
     private String getAuthToken(String authUrl) {
-        if (PRIAD_AUTH_TOKEN.equals("")) {
+        String authToken = PRIAD_AUTH_TOKEN;
+
+        if (PRIAD_AUTH_TOKEN == null || PRIAD_AUTH_TOKEN.equals("")) {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(PRIAD_AUTH_PASSWORD);
-            HttpEntity entity = new HttpEntity(headers);
+            HttpEntity<NullType> entity = new HttpEntity<>(headers);
 
             ResponseEntity<TokenResponse> response = this.restTemplate.exchange(
                     authUrl,
@@ -66,15 +70,11 @@ public class MedicService {
                     TokenResponse.class
             );
 
-            if (response.getStatusCode() == HttpStatus.OK) {
-                var item = response.getBody();
-                return item.getToken();
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                authToken = response.getBody().getToken();
             }
-
-            return "";
         }
-
-        return PRIAD_AUTH_TOKEN;
+        return authToken;
     }
 
     public List<Symptom> fetchSymptoms() {
@@ -85,13 +85,12 @@ public class MedicService {
                     this.priadPathBuilder("/symptoms", null),
                     HttpMethod.GET,
                     null,
-                    new ParameterizedTypeReference<List<Symptom>>() {}
+                    new ParameterizedTypeReference<>() {}
             );
-
             symptoms = response.getStatusCode() == HttpStatus.OK? response.getBody(): Collections.emptyList();
 
         } catch (Error error) {
-            System.out.println(error);
+            //
         }
 
         return symptoms;
@@ -100,28 +99,23 @@ public class MedicService {
     public List<Diagnosis> diagnose(ArrayList<Integer> symptomIds, String gender, int yob) {
         List<Diagnosis> diagnoses = null;
         Map<String, String> diagnoseParams = new HashMap<>();
-        String symptoms = "";
+        String symptoms = symptomIds.stream().map((id) -> Integer.toString(id)).collect(Collectors.joining(","));
 
-        for (int symptomId: symptomIds) {
-            symptoms = symptoms + symptomId + ",";
-        }
         diagnoseParams.put("symptoms", "[" + symptoms + "]");
         diagnoseParams.put("gender", gender);
         diagnoseParams.put("year_of_birth", String.valueOf(yob));
-
-        System.out.println(this.priadPathBuilder("/diagnosis", diagnoseParams));
 
         try {
             ResponseEntity<List<Diagnosis>> response = this.restTemplate.exchange(
                     this.priadPathBuilder("/diagnosis", diagnoseParams),
                     HttpMethod.GET,
                     null,
-                    new ParameterizedTypeReference<List<Diagnosis>>() {}
+                    new ParameterizedTypeReference<>() {}
             );
 
             diagnoses = response.getStatusCode() == HttpStatus.OK? response.getBody(): Collections.emptyList();
         } catch (HttpClientErrorException errorException) {
-            System.out.println(errorException);
+            //
         }
 
         return diagnoses;
