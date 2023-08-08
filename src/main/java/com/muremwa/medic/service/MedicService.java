@@ -78,7 +78,7 @@ public class MedicService {
     }
 
     public List<Symptom> fetchSymptoms() throws HttpClientErrorException {
-        List<Symptom> symptoms = null;
+        List<Symptom> symptoms;
 
         ResponseEntity<List<Symptom>> response = this.restTemplate.exchange(
                 this.priadPathBuilder("/symptoms", null),
@@ -92,7 +92,7 @@ public class MedicService {
     }
 
     public List<Diagnosis> diagnose(ArrayList<Integer> symptomIds, String gender, int yob) throws HttpClientErrorException {
-        List<Diagnosis> diagnoses = null;
+        List<Diagnosis> diagnoses;
         Map<String, String> diagnoseParams = new HashMap<>();
         String symptoms = symptomIds.stream().map((id) -> Integer.toString(id)).collect(Collectors.joining(","));
 
