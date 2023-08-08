@@ -17,7 +17,7 @@ public class Diagnosis {
 
     @Data
     @NoArgsConstructor
-    public class Issue {
+    public static class Issue {
         @JsonProperty("ID")
         private int id;
 
@@ -42,7 +42,7 @@ public class Diagnosis {
 
     @Data
     @NoArgsConstructor
-    public class SpecialisationItem {
+    public static class SpecialisationItem {
         @JsonProperty("ID")
         private int id;
 
