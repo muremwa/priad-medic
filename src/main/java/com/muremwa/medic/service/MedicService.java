@@ -91,7 +91,7 @@ public class MedicService {
         return symptoms;
     }
 
-    public List<Diagnosis> diagnose(ArrayList<Integer> symptomIds, String gender, int yob) throws HttpClientErrorException {
+    public List<Diagnosis> diagnose(List<Integer> symptomIds, String gender, int yob) throws HttpClientErrorException {
         List<Diagnosis> diagnoses;
         Map<String, String> diagnoseParams = new HashMap<>();
         String symptoms = symptomIds.stream().map((id) -> Integer.toString(id)).collect(Collectors.joining(","));
